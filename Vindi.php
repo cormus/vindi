@@ -1,6 +1,4 @@
 <?php
-namespace App\Helpers;
-
 /**
  * Payment Gateway Integration with VINDI.
  *
@@ -24,8 +22,8 @@ namespace App\Helpers;
  *
  * @category   PaymentGatewy
  * @package    Payments
- * @author     Felipe Hlibco <hlibco@gmail.com>
- * @copyright  1997-2014 The PHP Group
+ * @author     Alex Ribeiro <alexprodutor@hotmail.com>
+ * @copyright  2005-2014 The Cormus Group
  * @license    http://www.php.net/license/3_01.txt  PHP License 3.01
  * @version    0.1
  */
@@ -237,6 +235,93 @@ class Vindi {
         return false;
     }
 
+    /**
+     * Create a new product
+     *
+	 
+	 
+	 Product::Parameters::Create {
+name (string): Nome do produto,
+code (string, opcional): Código externo do produto,
+unit (string, opcional): Texto para descrever uma unidade do produto. Apenas para quantidade variável,
+status (string) = ['active' ou 'inactive' ou 'deleted']: Status do produto,
+pricing_schema (PricingSchema::Parameters, opcional): Esquema de precificação do produto,
+metadata (metadata, opcional): Metadados do plano
+}
+PricingSchema::Parameters {
+price (number): Preço base,
+minimum_price (number, opcional): Preço mínimo,
+schema_type (string) = ['flat' ou 'per_unit' ou 'step_usage' ou 'volume_usage']: Tipo de cálculo da precificação,
+pricing_ranges (array[PricingRange::Parameters], opcional): Lista de faixas de precificação
+}
+PricingRange::Parameters {
+start_quantity (integer): Início da faixa,
+end_quantity (integer, opcional): Término da faixa. Opcional apenas para a última,
+price (number): Preço da unidade ou da faixa, dependendo do tipo escolhido,
+overage_price (number, opcional): Preço unitário do excedente da faixa
+}
+metadata {
+}
+	 
+	 {
+  "name": "",
+  "code": "",
+  "unit": "",
+  "status": "",
+  "pricing_schema": {
+    "price": 0,
+    "minimum_price": 0,
+    "schema_type": "",
+    "pricing_ranges": [
+      {
+        "start_quantity": 0,
+        "end_quantity": 0,
+        "price": 0,
+        "overage_price": 0
+      }
+    ]
+  },
+  "metadata": {}
+}
+	 
+     */
+    public function createProduct($name, $email, $code)
+    {
+	   $endpoint = 'https://app.vindi.com.br:443/api/v1/products';
+
+	   $params = array(
+		  "name" => "",
+		  "code" => "",
+		  "unit" => "",
+		  "status" => "",
+		  "pricing_schema" => array
+		   (
+			"price" => 0,
+			"minimum_price" => 0,
+			"schema_type" => "",
+			"pricing_ranges" => array
+			(
+				array
+				(
+					"start_quantity" => 0,
+					"end_quantity" => 0,
+					"price" => 0,
+					"overage_price" => 0
+				)
+			)
+		  ),
+		  "metadata": {}
+		);
+
+        $response = $this->exec($endpoint, $params);
+
+        if ($response) {
+            return $this->getBody()->customer->id;
+        }
+
+        return false;
+    }
+
 
     /**
      * Create a new payment profile associated to a customer
@@ -267,11 +352,10 @@ class Vindi {
     /**
      * Create a bill (this is not the invoice it self)
      *
-     * @param  string $holder_name     creditcard owner's name
-     * @param  string $card_expiration expiration date 'mm/YY'
-     * @param  int    $card_number     creditcard number
-     * @param  int    $card_cvv        creditcard verification value
-     * @param  int    $customer_id     customer id registered in VINDI's platform
+     * @param  string $customer_id          customer id registered in VINDI's platform
+     * @param  string $payment_method_code  forma de pagamento utilizada pelo usuario
+     * @param  int    $amount               amount
+     * @param  int    $product_id           producty id registered in VINDI's platform
      * @return object API object
      */
     public function createBill($customer_id, $payment_method_code, $amount, $product_id)
